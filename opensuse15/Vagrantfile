@@ -1,0 +1,38 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure("2") do |config|
+  config.vm.box = "bento/opensuse-leap-15.1"	
+  config.disksize.size = '300GB'
+  config.vm.synced_folder "../data", "/vagrant_data"
+  config.vm.provider "virtualbox" do |vb|
+    #vb.gui = true
+    vb.memory = 4096
+    vb.cpus = 2
+  end
+
+  config.vm.provision "shell", inline: <<-SHELL
+    # Prepare Yocto environment.
+    sudo zypper -n up
+    sudo zypper -n install python gcc gcc-c++ git chrpath make wget python-xml diffstat makeinfo python-curses patch socat python3 python3-curses tar python3-pip python3-pexpect xz which python3-Jinja2 Mesa-libEGL1 libSDL-devel xterm rpcgen Mesa-dri-devel
+    sudo pip3 install GitPython
+
+    # error
+    sudo zypper -n install lz4 zstd
+  SHELL
+
+  config.vm.provision "shell", privileged: false, inline: <<-SHELL
+    # Yocto build
+    git clone git://git.yoctoproject.org/poky
+    cd poky
+    # Gatesgarth(Yocto 3.2)
+    git checkout -b gatesgarth
+
+    # build
+    source oe-init-build-env
+    bitbake core-image-weston
+  SHELL
+
+end
+
+
