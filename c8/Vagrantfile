@@ -1,0 +1,52 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure("2") do |config|
+  config.vm.box = "generic/centos8"	
+  config.disksize.size = '300GB'
+  config.vm.box_check_update = false
+  config.vm.network :forwarded_port, guest: 80, host: 8080
+  config.vm.synced_folder "../data", "/vagrant_data"
+  config.vm.provider "virtualbox" do |vb|
+    vb.gui = true
+    vb.memory = 4096;Queue
+    vb.cpus = 2
+  end
+
+  config.vm.provision "shell", inline: <<-SHELL
+
+    # Prepare Yocto environment.
+    sudo dnf install -y epel-release
+    sudo dnf list --enablerepo powertools
+    sudo dnf config-manager --set-enabled powertools
+    sudo dnf makecache
+    sudo dnf install -y --skip-broken gawk make wget tar bzip2 gzip python3 unzip perl patch \
+      diffutils diffstat git cpp gcc gcc-c++ glibc-devel texinfo chrpath ccache socat perl-Data-Dumper \
+      perl-Text-ParseWords perl-Thread-Queue python3-pip python3-GitPython python3-jinja2 \
+      python3-pexpect xz which SDL-devel xterm rpcgen mesa-libGL-devel
+
+    # desktop
+    sudo dnf -y group install "Server with GUI"
+    sudo systemctl set-default graphical.target
+
+    # error
+    sudo dnf -y install rpcgen zstd
+
+  SHELL
+
+  config.vm.provision "shell", privileged: false, inline: <<-SHELL
+    # Yocto build
+    # Gatesgarth(Yocto 3.2)
+    git clone git://git.yoctoproject.org/poky
+    cd poky
+    git checkout -b gatesgarth
+
+    # build
+    source oe-init-build-env
+    bitbake core-image-weston
+
+  SHELL
+
+end
+
+
