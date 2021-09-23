@@ -1,0 +1,24 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure("2") do |config|
+  #config.vm.box = "bento/ubuntu-18.04"
+  config.vm.box = "ubuntu/bionic64"	
+  config.disksize.size = '300GB'
+  config.vm.synced_folder "../data", "/vagrant_data"
+  config.vm.provider "virtualbox" do |vb|
+    vb.gui = true
+    vb.memory = 4096
+    vb.cpus = 2
+    vb.customize ["modifyvm", :id, "--nested-hw-virt", "on"]
+  end
+
+  config.vm.provision "shell", inline: <<-SHELL
+  SHELL
+
+  config.vm.provision "shell", privileged: false, inline: <<-SHELL
+  SHELL
+
+end
+
+
